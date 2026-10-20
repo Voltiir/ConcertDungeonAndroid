@@ -1,0 +1,41 @@
+имя:           если-файлы-не-найдены
+
+на:
+  workflow_dispatch:
+  толкать:
+    пути:
+      - '*.zip'
+      - '.github/workflows/build.yml'
+
+работа:
+  строить:
+    наезжает: убунту-последняя веѵрсия
+    шаги:
+      - использует: действия/checkout@v4
+
+      - использует: действия/setup-java@v4
+        с:
+          распределение: темурин
+          java-версия: '17'
+
+      - имя: Извлечь проект
+        бегать: |
+          ZIP=$(найти . -maxdepth 1 -name '*.zip' -print -quit)
+          тест -n "$ZIP"
+          источник mkdir
+          ссылка -q "$ZIP" -d ссылка
+          найти источник -имя settings.gradle.kts -o -имя settings.gradle
+
+      - имя: Посмотреть APK
+        бегать: |
+          ПРОЕКТ=$(найти источник -name settings.gradle.kts -o -name settings.gradle | head -n 1 | xargs dirname)
+          тест -n "$ПРОЕКТ"
+          компакт-диск "$ПРОЕКТ"
+          chmod +x gradlew 2>/dev/null || правда
+          эли [ -f gradlew]; тогда ./gradlew assembleDebug; иначе gradle assembleDebug; фи
+
+      - использует: действия/upload-artifact@v4
+        с:
+          имя: ConcertDungeon-APK
+          путь: источник/**/build/outputs/apk/debug/*.apk
+          если-файлы-не-найдены: ошибка
