@@ -50,4 +50,3 @@ jobs:
           name: ConcertDungeon-APK
           path: source/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-
