@@ -1,41 +1,41 @@
-имя:           если-файлы-не-найдены
+name: Build Android APK
 
-на:
-  workflow_dispatch:
-  толкать:
-    пути:
-      - '*.zip'
-      - '.github/workflows/build.yml'
+on:
+workflow_dispatch:
+push:
+paths:
+- '*.zip'
+- '.github/workflows/build.yml'
 
-работа:
-  строить:
-    наезжает: убунту-последняя веѵрсия
-    шаги:
-      - использует: действия/checkout@v4
+jobs:
+build:
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v4
 
-      - использует: действия/setup-java@v4
-        с:
-          распределение: темурин
-          java-версия: '17'
+  - uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
 
-      - имя: Извлечь проект
-        бегать: |
-          ZIP=$(найти . -maxdepth 1 -name '*.zip' -print -quit)
-          тест -n "$ZIP"
-          источник mkdir
-          ссылка -q "$ZIP" -d ссылка
-          найти источник -имя settings.gradle.kts -o -имя settings.gradle
+  - name: Extract project
+    run: |
+      ZIP=$(find . -maxdepth 1 -name '*.zip' -print -quit)
+      test -n "$ZIP"
+      mkdir source
+      unzip -q "$ZIP" -d source
+      find source \( -name settings.gradle.kts -o -name settings.gradle \)
 
-      - имя: Посмотреть APK
-        бегать: |
-          ПРОЕКТ=$(найти источник -name settings.gradle.kts -o -name settings.gradle | head -n 1 | xargs dirname)
-          тест -n "$ПРОЕКТ"
-          компакт-диск "$ПРОЕКТ"
-          chmod +x gradlew 2>/dev/null || правда
-          эли [ -f gradlew]; тогда ./gradlew assembleDebug; иначе gradle assembleDebug; фи
+  - name: Build APK
+    run: |
+      PROJECT=$(find source \( -name settings.gradle.kts -o -name settings.gradle \) -print -quit)
+      test -n "$PROJECT"
+      cd "$(dirname "$PROJECT")"
+      chmod +x gradlew 2>/dev/null || true
+      if [ -f gradlew ]; then ./gradlew assembleDebug; else gradle assembleDebug; fi
 
-      - использует: действия/upload-artifact@v4
-        с:
-          имя: ConcertDungeon-APK
-          путь: источник/**/build/outputs/apk/debug/*.apk
-          если-файлы-не-найдены: ошибка
+  - uses: actions/upload-artifact@v4
+    with:
+      name: ConcertDungeon-APK
+      path: source/**/build/outputs/apk/debug/*.apk
+      if-no-files-found: error
